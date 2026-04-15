@@ -2,7 +2,7 @@ import mediapipe as mp
 from new_features import normalize_and_extract_features
 import csv 
 
-model_path = "database/pose_landmarker_full.task"
+model_path = "database/../Model/pose_landmarker_full.task"
 
 '''
     #Giving shorter names to the classes and enums that we will be using from the mediapipe library.
