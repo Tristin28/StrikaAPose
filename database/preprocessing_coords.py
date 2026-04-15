@@ -2,7 +2,7 @@ import numpy as np
 import mediapipe as mp
 import cv2
 from pathlib import Path
-from processing_images import resize_if_small
+from database.processing_images import resize_if_small
 
 def create_mediapipe_object(image, landmarker):
     '''
