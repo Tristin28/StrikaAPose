@@ -1,5 +1,5 @@
 import numpy as np
-from database.preprocessing_coords import extracting_raw_coords, normalise_single_pose
+from preprocessing_coords import extracting_raw_coords, normalise_single_pose
 
 LEFT_SHOULDER = 11
 RIGHT_SHOULDER = 12

@@ -1,8 +1,8 @@
 import mediapipe as mp
-from database.new_features import normalize_and_extract_features
+from new_features import normalize_and_extract_features
 import csv 
 
-model_path = '../Model/pose_landmarker_full.task' #Currently in the same directory as this file.
+model_path = "database/pose_landmarker_full.task"
 
 '''
     #Giving shorter names to the classes and enums that we will be using from the mediapipe library.
@@ -29,7 +29,7 @@ with PoseLandmarker.create_from_options(options) as landmarker:
   '''
   feature_list = normalize_and_extract_features("Images",landmarker)
 
-with open('output.csv','w',newline='') as file:
+with open('../output.csv','w',newline='') as file:
   writer=csv.writer(file)
   for img_path, data in feature_list:
     row = [img_path] + data.tolist()
