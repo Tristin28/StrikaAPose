@@ -1,5 +1,6 @@
 import mediapipe as mp
-from preprocessing_coords import normalise_coords
+from new_features import normalize_and_extract_features
+import csv 
 
 model_path = 'pose_landmarker_full.task' #Currently in the same directory as this file.
 
@@ -26,7 +27,10 @@ with PoseLandmarker.create_from_options(options) as landmarker:
     Using a class method to create an instance of the PoseLandmarker - where this will provide method in order to interact with the pose pipeline
     Then w.r.t with ... as ... the instance will be automatically freed from memory after the block of code is executed.
   '''
-  poses = normalise_coords("Images", landmarker)
+  feature_list = normalize_and_extract_features("Images",landmarker)
 
-#print(f"Total successful poses extracted: {len(poses)}")
-#print(poses)
+with open('output.csv','w',newline='') as file:
+  writer=csv.writer(file)
+  for img_path, data in feature_list:
+    row = [img_path] + data.tolist()
+    writer.writerow(row)

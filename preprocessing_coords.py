@@ -78,22 +78,24 @@ def position(coords,pose_landmarks,LEFT_SHOULDER=11, RIGHT_SHOULDER=12):
         print("SKIPPED\n")
         return None
     
-def scaling(coords, LEFT_SHOULDER=11, RIGHT_SHOULDER=12, LEFT_HIP=23, RIGHT_HIP=24):
+def scaling(coords, LEFT_SHOULDER=11, RIGHT_SHOULDER=12):
     #norm function calculates Euclidian distance on the passed coordinates (vectors)
-    shoulder_width = np.linalg.norm(coords[LEFT_SHOULDER] + coords[RIGHT_SHOULDER])
-
+    shoulder_width = np.linalg.norm(coords[LEFT_SHOULDER] - coords[RIGHT_SHOULDER])
+    
     if shoulder_width > 0:
         return coords / shoulder_width
     else:
         print("INVALID SHOULDER WIDTH")
         return None
+    
 
 def rotate_pose(coords, LEFT_SHOULDER=11, RIGHT_SHOULDER=12):
     roated_coords = coords.copy()
 
     shoulder_vector = coords[LEFT_SHOULDER] - coords[RIGHT_SHOULDER]
 
-    angle = np.arctan(shoulder_vector[0],shoulder_vector[1])
+    angle = np.arctan2(shoulder_vector[0],shoulder_vector[1]) #Returning the angle of which direction the shoulder is pointing to i.e. returning 
+    
     cos_theta = np.cos(-angle)
     sin_theta = np.sin(-angle)
 
@@ -124,21 +126,3 @@ def normalise_single_pose(pose_landmarks):
     
     coords = rotate_pose(coords)
     return coords
-
-def normalize_and_extract_features(images_folder, landmarker):
-    extracted = extracting_raw_coords(images_folder, landmarker)
-
-    all_features = []
-
-    for file_path, pose_landmarks in extracted:
-        coords = normalise_single_pose(pose_landmarks)
-        if coords is None:
-            print(f"[SKIPPED AFTER NORMALIZATION]: {file_path}")
-            continue
-
-        #feature_vector = build_feature_vector(coords)
-
-        #all_features.append((file_path, feature_vector))
-
-    return all_features
-    
