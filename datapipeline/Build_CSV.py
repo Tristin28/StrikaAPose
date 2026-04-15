@@ -26,8 +26,13 @@ def creating_PoseLandmark_instance():
   return PoseLandmarker.create_from_options(options)
 
 def save_features_to_csv(all_features,csv_path):
+  num_features = len(all_features[0][1])
+  header = ["label"] + [f"feature_{i}" for i in range(num_features)]
+
   with open(csv_path,'w',newline='') as file:
     writer=csv.writer(file)
+    writer.writerow(header)
+
     for label, feature_vector in all_features:
       row = [label] + feature_vector.tolist()
       writer.writerow(row)
@@ -36,4 +41,4 @@ if __name__ == "__main__":
   with creating_PoseLandmark_instance() as landmarker:
     feature_list = normalize_and_extract_features("Images",landmarker)
   
-  save_features_to_csv(feature_list,"datapipeline/../output.csv")
+  save_features_to_csv(feature_list,"datapipeline/../pose_dataset.csv")
