@@ -65,7 +65,6 @@ def extracting_raw_coords(images_folder, landmarker):
 
     return extracted_poses_lm
 
-
 def position(coords,LEFT_SHOULDER=11, RIGHT_SHOULDER=12):
     '''
        Landmarks' values would now be representing coordinates w.r.t a new origin which is the centre of shoulder 
@@ -113,8 +112,6 @@ def normalise_single_pose(pose_landmarks):
     coords = np.array([[lm.x, lm.y, lm.z] for lm in pose_landmarks])
 
     coords = position(coords)
-    if coords is None:
-        return None
     
     coords = scaling(coords)
     if coords is None:

@@ -16,9 +16,9 @@ pose_db.load_csv("pose_dataset.csv")
 @app.route("/predict",methods = ["POST"])
 def predict():
     data = request.json
-    unseen_vector = np.array(data["features"], dtype=np.float64)
+    raw_landmarks = np.array(data["landmarks"], dtype=np.float64)
     
-    normalised_vector = normalize_live_coords(unseen_vector)
+    normalised_vector = normalize_live_coords(raw_landmarks)
     
     label = predict_pose(normalised_vector, pose_db)
 
