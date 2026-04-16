@@ -1,0 +1,1 @@
+Note that for this project, python 3.12 + is required for the reason that typing's package is used.
