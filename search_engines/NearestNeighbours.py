@@ -7,8 +7,8 @@ class SklearnSearchEngine(SearchInterface):
         self.k = k
 
     @override
-    def fit(self, features):
-        self.model.fit(features)
+    def fit(self, feature_vectors):
+        self.model.fit(feature_vectors)
 
     @override
     def search(self, unseen_vector):
