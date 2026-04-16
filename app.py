@@ -5,7 +5,6 @@ from sklearn.neighbors import NearestNeighbors
 from load_csv import PoseClass
 import numpy as np
 
-
 app = Flask(__name__)
 
 search_engine = SklearnSearchEngine(model=NearestNeighbors(), k=3)
