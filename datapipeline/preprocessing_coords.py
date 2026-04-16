@@ -66,17 +66,13 @@ def extracting_raw_coords(images_folder, landmarker):
     return extracted_poses_lm
 
 
-def position(coords,pose_landmarks,LEFT_SHOULDER=11, RIGHT_SHOULDER=12):
+def position(coords,LEFT_SHOULDER=11, RIGHT_SHOULDER=12):
     '''
        Landmarks' values would now be representing coordinates w.r.t a new origin which is the centre of shoulder 
        (chose shoulder centre to be the origin because it is the body part which is almost always visible)
     '''
-
-    if pose_landmarks[LEFT_SHOULDER].visibility > 0.5 and pose_landmarks[RIGHT_SHOULDER].visibility >0.5:
-        return coords - ((coords[LEFT_SHOULDER] + coords[RIGHT_SHOULDER]) / 2)
-    else:
-        print("SKIPPED\n")
-        return None
+    shoulder_center = (coords[LEFT_SHOULDER] + coords[RIGHT_SHOULDER]) / 2
+    return coords - shoulder_center
     
 def scaling(coords, LEFT_SHOULDER=11, RIGHT_SHOULDER=12):
     #norm function calculates Euclidian distance on the passed coordinates (vectors)
@@ -116,7 +112,7 @@ def normalise_single_pose(pose_landmarks):
 
     coords = np.array([[lm.x, lm.y, lm.z] for lm in pose_landmarks])
 
-    coords = position(coords,pose_landmarks)
+    coords = position(coords)
     if coords is None:
         return None
     

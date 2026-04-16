@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify
-from NearestNeighbours import SklearnSearchEngine
+from search_engines.NearestNeighbours import SklearnSearchEngine
 from predictor.predictor import predict_pose
 from sklearn.neighbors import NearestNeighbors
 from dataset.load_csv import PoseClass
 import numpy as np
+from livepipeline.normalising_coords import normalize_live_coords
 
 app = Flask(__name__)
 
@@ -16,8 +17,10 @@ pose_db.load_csv("pose_dataset.csv")
 def predict():
     data = request.json
     unseen_vector = np.array(data["features"], dtype=np.float64)
-
-    label = predict_pose(unseen_vector, pose_db)
+    
+    normalised_vector = normalize_live_coords(unseen_vector)
+    
+    label = predict_pose(normalised_vector, pose_db)
 
     return jsonify({"prediction": label})
 

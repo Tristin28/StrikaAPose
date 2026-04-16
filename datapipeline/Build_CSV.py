@@ -41,4 +41,4 @@ if __name__ == "__main__":
   with creating_PoseLandmark_instance() as landmarker:
     feature_list = normalize_and_extract_features("Images",landmarker)
   
-  save_features_to_csv(feature_list,"datapipeline/../pose_dataset.csv")
+  save_features_to_csv(feature_list,"datapipeline/../dataset/pose_dataset.csv")
