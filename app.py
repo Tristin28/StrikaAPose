@@ -1,8 +1,8 @@
 from flask import Flask, request, jsonify
 from NearestNeighbours import SklearnSearchEngine
-from predictor import predict_pose
+from predictor.predictor import predict_pose
 from sklearn.neighbors import NearestNeighbors
-from load_csv import PoseClass
+from dataset.load_csv import PoseClass
 import numpy as np
 
 app = Flask(__name__)
@@ -10,7 +10,7 @@ app = Flask(__name__)
 search_engine = SklearnSearchEngine(model=NearestNeighbors(), k=3)
 
 pose_db = PoseClass(search_engine)
-pose_db.load_csv()
+pose_db.load_csv("pose_dataset.csv")
 
 @app.route("/predict",methods = ["POST"])
 def predict():
