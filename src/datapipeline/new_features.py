@@ -67,6 +67,14 @@ def compute_angle(a, b, c):
     ba = a - b
     bc = c - b
 
+    euclidian_distance = (np.linalg.norm(ba) * np.linalg.norm(bc))
+    if euclidian_distance < 1e-8:
+        '''
+            if vectors (b->a) and (b->c) have almost zero length then the 2 points are the same or extremly close
+            Which means there is no reliable line to use to compute angle b
+        '''
+        return 0.0
+    
     cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
 
     return np.arccos(np.clip(cosine_angle, -1.0, 1.0))

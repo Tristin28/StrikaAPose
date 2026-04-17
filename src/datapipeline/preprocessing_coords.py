@@ -89,7 +89,7 @@ def rotate_pose(coords, LEFT_SHOULDER=11, RIGHT_SHOULDER=12):
 
     shoulder_vector = coords[LEFT_SHOULDER] - coords[RIGHT_SHOULDER]
 
-    angle = np.arctan2(shoulder_vector[0],shoulder_vector[1]) #Returning the angle of which direction the shoulder is pointing to i.e. returning 
+    angle = np.arctan2(shoulder_vector[1],shoulder_vector[0]) #Returning the angle of which direction the shoulder is pointing to i.e. returning 
     
     cos_theta = np.cos(-angle)
     sin_theta = np.sin(-angle)
