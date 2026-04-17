@@ -5,13 +5,14 @@ from sklearn.neighbors import NearestNeighbors
 from src.dataset.load_csv import PoseClass
 import numpy as np
 from src.livepipeline.normalising_coords import normalize_live_coords
+from src.datapipeline.config import DATASET_PATH, MODEL_PATH
 
 app = Flask(__name__)
 
 search_engine = SklearnSearchEngine(model=NearestNeighbors(metric="euclidean"), k=3)
 
 pose_db = PoseClass(search_engine)
-pose_db.load_csv("./dataset/pose_dataset.csv")
+pose_db.load_csv(DATASET_PATH)
 
 @app.route("/predict",methods = ["POST"])
 def predict():

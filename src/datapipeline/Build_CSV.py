@@ -1,10 +1,9 @@
 import mediapipe as mp
 from src.datapipeline.new_features import normalize_and_extract_features
 import csv 
+from src.datapipeline.config import DATASET_PATH, MODEL_PATH
 
-def creating_PoseLandmark_instance():
-  model_path = "datapipeline/../Model/pose_landmarker_full.task"
-
+def creating_PoseLandmark_instance(model_path=MODEL_PATH):
   '''
       #Giving shorter names to the classes and enums that we will be using from the mediapipe library.
   '''
@@ -41,4 +40,4 @@ if __name__ == "__main__":
   with creating_PoseLandmark_instance() as landmarker:
     feature_list = normalize_and_extract_features("Images",landmarker)
   
-  save_features_to_csv(feature_list,"datapipeline/../dataset/pose_dataset.csv")
+  save_features_to_csv(feature_list,DATASET_PATH)
