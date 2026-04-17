@@ -70,8 +70,8 @@ def compute_angle(a, b, c):
     euclidian_distance = (np.linalg.norm(ba) * np.linalg.norm(bc))
     if euclidian_distance < 1e-8:
         '''
-            if vectors (b->a) and (b->c) have almost zero length then the 2 points are the same or extremly close
-            Which means there is no reliable line to use to compute angle b
+            if cooedinates (b, a) or (b, c) are near each other or the same point then this means
+            There is no reliable line to use to compute angle b
         '''
         return 0.0
     
