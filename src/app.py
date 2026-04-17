@@ -5,7 +5,7 @@ from sklearn.neighbors import NearestNeighbors
 from src.dataset.load_csv import PoseClass
 import numpy as np
 from src.livepipeline.normalising_coords import normalize_live_coords
-from src.datapipeline.config import DATASET_PATH, MODEL_PATH
+from src.datapipeline.config import DATASET_PATH
 
 app = Flask(__name__)
 
