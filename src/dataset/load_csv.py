@@ -12,7 +12,7 @@ class PoseClass:
         df = pd.read_csv(csv_path)
 
         self.labels = df["labels"].to_numpy() #Converting to a numpy data strucutre rather than pandas because scikit-learn algo. expects this structure
-        self.features = df.drop(columns=["label"]).to_numpy(dtype=np.float64)
+        self.features = df.drop(columns=["labels"]).to_numpy(dtype=np.float64)
 
         self.search_engine.fit(self.features)
         
