@@ -3,7 +3,14 @@ from src.datapipeline.preprocessing_coords import position, scaling, rotate_pose
 from src.datapipeline.new_features import build_feature_vector
 
 def normalize_live_coords(raw_landmarks):
-    coords = np.array([[lm["x"], lm["y"], lm["z"]] for lm in raw_landmarks])
+    if raw_landmarks is None:
+        print("NO LANDMARKS WERE RECEIVED")
+        return None
+    
+    coords = np.array(raw_landmarks, dtype=np.float64)
+    if coords.shape != (33, 3):
+        print("INVALID LANDMARK SHAPE")
+        return None
 
     coords = position(coords)
     

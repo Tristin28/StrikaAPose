@@ -17,12 +17,13 @@ pose_db.load_csv(DATASET_PATH)
 @app.route("/predict",methods = ["POST"])
 def predict():
     data = request.json
-    raw_landmarks = np.array(data["landmarks"], dtype=np.float64)
+    raw_landmarks = data["landmarks"]
     
     normalised_vector = normalize_live_coords(raw_landmarks)
+    if normalised_vector is None:
+        return jsonify({"error": "Invalid pose input"}), 400
     
     label = predict_pose(normalised_vector, pose_db)
-
     return jsonify({"prediction": label})
 
 if __name__ == "__main__":
