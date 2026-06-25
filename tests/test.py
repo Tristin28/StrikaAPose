@@ -8,9 +8,9 @@ from src.livepipeline.normalising_coords import normalize_live_coords
 from src.datapipeline.config import DATASET_PATH
 
 def main():
-    search_engine = SklearnSearchEngine(model=NearestNeighbors(metric="euclidean"),k=3)
+    search_engines = {"euclidean": SklearnSearchEngine(model=NearestNeighbors(metric="euclidean"), k=3)}
 
-    pose_db = PoseClass(search_engine)
+    pose_db = PoseClass(search_engines)
     pose_db.load_csv(DATASET_PATH)
 
     # fake example pose with 33 landmarks, each [x, y, z]
@@ -21,8 +21,9 @@ def main():
         print("Normalization failed")
         return
 
-    label = predict_pose(feature_vector, pose_db)
-    print("Predicted label:", label)
+    result = predict_pose(feature_vector, pose_db, "euclidean")
+    print("Prediction:", result["prediction"])
+    print("Closest image:", result["best_match"]["image"])
 
 if __name__ == "__main__":
     main()

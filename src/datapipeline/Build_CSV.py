@@ -5,7 +5,7 @@ from src.datapipeline.config import DATASET_PATH, MODEL_PATH
 
 def creating_PoseLandmark_instance(model_path=MODEL_PATH):
   '''
-      #Giving shorter names to the classes and enums that we will be using from the mediapipe library.
+      Giving shorter names to the classes and enums that we will be using from the mediapipe library.
   '''
   BaseOptions = mp.tasks.BaseOptions #A class where its instance will have its fields initialised to the location (file path) of the model.
   PoseLandmarker = mp.tasks.vision.PoseLandmarker
@@ -17,7 +17,7 @@ def creating_PoseLandmark_instance(model_path=MODEL_PATH):
       Note further configurations can be added either later on or directly in the constructor of the PoseLandmarkerOptions class.
   '''
   options = PoseLandmarkerOptions(
-      base_options=BaseOptions(model_asset_path=model_path),
+      base_options=BaseOptions(model_asset_path=str(model_path)),
       running_mode=VisionRunningMode.IMAGE,
       num_poses=1
   )
@@ -25,15 +25,15 @@ def creating_PoseLandmark_instance(model_path=MODEL_PATH):
   return PoseLandmarker.create_from_options(options)
 
 def save_features_to_csv(all_features,csv_path):
-  num_features = len(all_features[0][1])
-  header = ["label"] + [f"feature_{i}" for i in range(num_features)]
+  num_features = len(all_features[0][2])
+  header = ["image_path", "label"] + [f"feature_{i}" for i in range(num_features)]
 
   with open(csv_path,'w',newline='') as file:
     writer=csv.writer(file)
     writer.writerow(header)
 
-    for label, feature_vector in all_features:
-      row = [label] + feature_vector.tolist()
+    for image_path, label, feature_vector in all_features:
+      row = [image_path, label] + feature_vector.tolist()
       writer.writerow(row)
 
 if __name__ == "__main__":
