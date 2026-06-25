@@ -1,5 +1,6 @@
 import numpy as np
 from src.datapipeline.preprocessing_coords import extracting_raw_coords, normalise_single_pose
+from src.datapipeline.config import PROJECT_ROOT
 
 LANDMARKS = {
     "LEFT_SHOULDER": 11,
@@ -14,7 +15,14 @@ LANDMARKS = {
     "RIGHT_KNEE": 26,
     "LEFT_ANKLE": 27,
     "RIGHT_ANKLE": 28,
-    "NOSE": 0
+    "NOSE": 0,
+    #coarse hand points that MediaPipe Pose already gives us (no extra model needed)
+    "LEFT_PINKY": 17,
+    "RIGHT_PINKY": 18,
+    "LEFT_INDEX": 19,
+    "RIGHT_INDEX": 20,
+    "LEFT_THUMB": 21,
+    "RIGHT_THUMB": 22
 }
 
 
@@ -30,7 +38,8 @@ def normalize_and_extract_features(images_folder, landmarker):
 
         feature_vector = build_feature_vector(coords)
         label = file_path.parent.name
-        all_features.append((label, feature_vector))
+        image_path = file_path.relative_to(PROJECT_ROOT).as_posix() #e.g. "Images/Heart/Heart_001.jpg" so the frontend can load it
+        all_features.append((image_path, label, feature_vector))
 
     return all_features
 
@@ -63,6 +72,26 @@ def extract_key_distances(coords):
 
     return np.array(distances, dtype=np.float64)
 
+def extract_hand_features(coords):
+    '''
+        Lightweight hand-orientation features from the coarse hand points MediaPipe Pose
+        already provides (wrist, thumb, index, pinky). No extra hand model is used.
+        Per hand we capture: how open the hand is, how the wrist is bent, and where the
+        thumb points relative to the index finger.
+    '''
+    hand_features = [
+        #left hand
+        compute_angle(coords[LANDMARKS["LEFT_INDEX"]], coords[LANDMARKS["LEFT_WRIST"]], coords[LANDMARKS["LEFT_PINKY"]]),   #hand spread (index-wrist-pinky)
+        compute_angle(coords[LANDMARKS["LEFT_ELBOW"]], coords[LANDMARKS["LEFT_WRIST"]], coords[LANDMARKS["LEFT_INDEX"]]),    #wrist flexion vs forearm
+        compute_angle(coords[LANDMARKS["LEFT_THUMB"]], coords[LANDMARKS["LEFT_WRIST"]], coords[LANDMARKS["LEFT_INDEX"]]),    #thumb vs index
+        #right hand
+        compute_angle(coords[LANDMARKS["RIGHT_INDEX"]], coords[LANDMARKS["RIGHT_WRIST"]], coords[LANDMARKS["RIGHT_PINKY"]]),
+        compute_angle(coords[LANDMARKS["RIGHT_ELBOW"]], coords[LANDMARKS["RIGHT_WRIST"]], coords[LANDMARKS["RIGHT_INDEX"]]),
+        compute_angle(coords[LANDMARKS["RIGHT_THUMB"]], coords[LANDMARKS["RIGHT_WRIST"]], coords[LANDMARKS["RIGHT_INDEX"]]),
+    ]
+
+    return np.array(hand_features, dtype=np.float64)
+
 def compute_angle(a, b, c):
     ba = a - b
     bc = c - b
@@ -84,5 +113,6 @@ def build_feature_vector(coords):
     flat_coords = coords.flatten() #99 features
     angles = extract_joint_angles(coords) #8 features
     distances = extract_key_distances(coords) #7 features
+    hand_features = extract_hand_features(coords) #6 features (coarse hand orientation)
 
-    return np.concatenate([flat_coords, angles, distances])
+    return np.concatenate([flat_coords, angles, distances, hand_features])

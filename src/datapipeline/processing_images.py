@@ -1,4 +1,3 @@
-import mediapipe as mp
 import cv2
 from pathlib import Path
 

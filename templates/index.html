@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Strike A Pose — Pose Matching Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="title-row">
+        <h1>Strike A Pose</h1>
+      </div>
+      <p class="subtitle">Live MediaPipe pose detection matched against a performance-art image dataset.</p>
+
+      <!-- Pipeline indicator -->
+      <ol class="pipeline" id="pipeline">
+        <li data-step="webcam">Webcam</li>
+        <li data-step="mediapipe">MediaPipe</li>
+        <li data-step="landmarks">Landmarks</li>
+        <li data-step="flask">Flask</li>
+        <li data-step="match">Match</li>
+      </ol>
+    </header>
+
+    <main class="dashboard">
+      <!-- LEFT: live camera -->
+      <section class="camera-panel">
+        <div class="video-wrapper">
+          <video id="video" autoplay playsinline></video>
+          <canvas id="overlay"></canvas>
+          <div class="placeholder" id="placeholder">Your live camera feed will appear here once you allow camera access.</div>
+          <div class="cam-pills">
+            <span class="pill pill-live" id="skeletonPill">Skeleton: idle</span>
+            <span class="pill">Backend match: every 5s</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: dashboard cards -->
+      <aside class="side">
+        <!-- Controls -->
+        <div class="card controls-card">
+          <label class="field-label" for="metricSelect">Similarity metric</label>
+          <select id="metricSelect">
+            <option value="euclidean">Euclidean (recommended)</option>
+            <option value="cosine">Cosine</option>
+            <option value="manhattan">Manhattan</option>
+          </select>
+          <button id="startCameraBtn" disabled>Loading model…</button>
+        </div>
+
+        <!-- Match result -->
+        <div class="card result-card" id="resultCard">
+          <div class="result-head">
+            <div>
+              <span class="card-eyebrow">Best available match</span>
+              <h2 id="predictionLabel">Waiting for pose…</h2>
+            </div>
+            <!-- circular countdown -->
+            <svg class="ring" viewBox="0 0 56 56" aria-hidden="true">
+              <circle class="ring-bg" cx="28" cy="28" r="24"></circle>
+              <circle class="ring-fg" id="ringFg" cx="28" cy="28" r="24"></circle>
+              <text class="ring-text" x="28" y="33" id="ringText">5</text>
+            </svg>
+          </div>
+
+          <div class="metric-row">
+            <span>Metric: <strong id="metricOut">—</strong></span>
+            <span>Distance: <strong id="distanceOut">—</strong></span>
+          </div>
+
+          <div class="bar-label"><span>Similarity</span><span id="simPct">—</span></div>
+          <div class="bar"><div class="bar-fill" id="simBar"></div></div>
+
+          <div class="updated">Last updated: <strong id="lastUpdated">never</strong></div>
+        </div>
+
+        <!-- Pose quality -->
+        <div class="card quality-card">
+          <div class="quality-head">
+            <span class="quality-dot" id="qualityDot"></span>
+            <span id="qualityText">Waiting for camera…</span>
+          </div>
+          <div class="quality-sub" id="landmarkCount">0/33 landmarks visible</div>
+          <div class="quality-warning" id="qualityWarning"></div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Side-by-side comparison -->
+    <section class="comparison">
+      <div class="compare-card">
+        <h3>Your Pose</h3>
+        <img id="userPoseImage" alt="Snapshot of the pose you made" />
+        <span class="compare-placeholder" id="userPosePlaceholder">No pose sent yet.</span>
+      </div>
+      <div class="compare-card highlight-target" id="matchCompareCard">
+        <h3>Best Available Match</h3>
+        <img id="matchedImage" alt="Best available matching pose from the dataset" />
+        <span class="compare-placeholder" id="matchPlaceholder">No match yet.</span>
+      </div>
+    </section>
+
+    <!-- History of the last 3 matches -->
+    <section class="history-section">
+      <h3 class="section-title">Last 3 Matches</h3>
+      <div class="history-grid" id="historyGrid">
+        <p class="compare-placeholder">Your last three matches will appear here once you start posing.</p>
+      </div>
+    </section>
+
+    <!-- Debug panel -->
+    <details class="debug">
+      <summary>Debug panel</summary>
+      <div class="debug-grid">
+        <span>Raw distance:</span><strong id="dbgDistance">—</strong>
+        <span>Metric:</span><strong id="dbgMetric">—</strong>
+        <span>Backend response time:</span><strong id="dbgLatency">—</strong>
+        <span>Prediction (voted):</span><strong id="dbgPrediction">—</strong>
+      </div>
+    </details>
+  </div>
+
+  <script type="module" src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
