@@ -4,6 +4,8 @@ import cv2
 from pathlib import Path
 from src.datapipeline.processing_images import resize_if_small
 
+SUPPORTED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
+
 def create_mediapipe_object(image, landmarker):
     '''
         Passed image has to be in RGB format for mediapipe, and this function will return the 33 landmarks or nothing
@@ -12,41 +14,48 @@ def create_mediapipe_object(image, landmarker):
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB,data=image)
     except Exception as e:
         print(f"{e}")
-        return None
+        return None, "invalid_mediapipe_image"
 
     try:
         result = landmarker.detect(mp_image)
     except Exception as e:
         print(f"\n[DETECTION PROCESS FAILED]: {e}")
-        return None
+        return None, "detection_failed"
 
     if not result.pose_landmarks:
         '''
             Checking it still because the model can still run successfully but no person was detected
         '''
         print(f"\nNO PERSON DETECTED")
-        return None
+        return None, "no_person_detected"
     
     pose_landmarks = result.pose_landmarks[0] #Storing 33 landmark objects where each object contains 4 fields which are equivelant to the 3D coordinates + visibility
 
     visibility_count = sum(1 for lm in pose_landmarks if hasattr(lm, "visibility") and lm.visibility >= 0.5)
     if visibility_count < 15:
         print(f"\nTOO FEW VISIBLE LANDMARKS: {visibility_count}")
-        return None
+        return None, "too_few_visible_landmarks"
 
-    return pose_landmarks
+    return pose_landmarks, None
 
-def extracting_raw_coords(images_folder, landmarker):
+def extracting_raw_coords(images_folder, landmarker, stats=None):
     images_dir = Path(images_folder).resolve()
     extracted_poses_lm = []
 
     for file_path in images_dir.rglob("*"):
         if not file_path.is_file():
             continue
+        if file_path.suffix.lower() not in SUPPORTED_IMAGE_EXTENSIONS:
+            continue
+
+        if stats is not None:
+            stats["images_seen"] += 1
 
         img = cv2.imread(str(file_path))
 
         if img is None:
+            if stats is not None:
+                stats["load_failed"] += 1
             print(f"LOAD FAILED: {file_path}")
             continue
 
@@ -54,12 +63,16 @@ def extracting_raw_coords(images_folder, landmarker):
 
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-        pose_landmarks = create_mediapipe_object(img_rgb, landmarker)
+        pose_landmarks, skip_reason = create_mediapipe_object(img_rgb, landmarker)
 
         if pose_landmarks is None:
+            if stats is not None:
+                stats[skip_reason] += 1
             print(f"SKIPPED: {file_path}\n")
             continue
 
+        if stats is not None:
+            stats["landmarks_extracted"] += 1
         extracted_poses_lm.append((file_path, pose_landmarks))
         print(f"POSE EXTRACTED: {file_path}")
 

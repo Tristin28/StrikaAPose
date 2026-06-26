@@ -1,3 +1,6 @@
+from threading import Timer
+import webbrowser
+
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from src.search_engines.NearestNeighbours import SklearnSearchEngine
 from src.predictor.predictor import predict_pose
@@ -13,12 +16,53 @@ app = Flask(
     static_folder=str(PROJECT_ROOT / "static"),
 )
 
-#One fitted search engine per similarity metric, so the UI can switch between them.
+# One fitted search engine per similarity metric, so the UI can switch between them.
+# We retrieve 3 neighbours so the predictor can reject ambiguous matches, but the
+# predicted label still comes from the single closest neighbour.
 METRICS = ["euclidean", "cosine", "manhattan"]
 search_engines = {metric: SklearnSearchEngine(model=NearestNeighbors(metric=metric), k=3) for metric in METRICS}
 
 pose_db = PoseClass(search_engines)
 pose_db.load_csv(DATASET_PATH)
+
+VISIBILITY_THRESHOLD = 0.5
+KEY_LANDMARKS_FOR_MATCH = {
+    "left shoulder": 11,
+    "right shoulder": 12,
+    "left elbow": 13,
+    "right elbow": 14,
+    "left wrist": 15,
+    "right wrist": 16,
+    "left hip": 23,
+    "right hip": 24,
+}
+
+
+def validate_landmark_visibility(visibility):
+    if visibility is None:
+        return None
+
+    if not isinstance(visibility, list) or len(visibility) != 33:
+        return "Invalid landmark visibility input."
+
+    try:
+        visibility_values = [float(value or 0) for value in visibility]
+    except (TypeError, ValueError):
+        return "Invalid landmark visibility input."
+
+    missing_key_landmarks = [
+        name
+        for name, index in KEY_LANDMARKS_FOR_MATCH.items()
+        if visibility_values[index] < VISIBILITY_THRESHOLD
+    ]
+    if missing_key_landmarks:
+        missing = ", ".join(missing_key_landmarks)
+        return f"Key pose points are not visible enough: {missing}."
+
+    return None
+
+def open_browser(url):
+    webbrowser.open_new(url)
 
 @app.route("/")
 def index():
@@ -38,9 +82,18 @@ def model_file(filename):
 def predict():
     data = request.json
     raw_landmarks = data["landmarks"]
-    metric = data.get("metric", "euclidean")
+    metric = data.get("metric", "cosine") #Default metric just in case the frontend doesn't send one, but it should always send one.
     if metric not in search_engines:
-        metric = "euclidean"
+        metric = "cosine"
+
+    visibility_error = validate_landmark_visibility(data.get("visibility"))
+    if visibility_error is not None:
+        return jsonify({
+            "prediction": None,
+            "metric": metric,
+            "match_found": False,
+            "message": visibility_error
+        })
 
     normalised_vector = normalize_live_coords(raw_landmarks)
     if normalised_vector is None:
@@ -50,4 +103,7 @@ def predict():
     return jsonify(result)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    host = "127.0.0.1"
+    port = 5000
+    Timer(1.0, open_browser, args=(f"http://{host}:{port}",)).start()
+    app.run(host=host, port=port, debug=True, use_reloader=False)
