@@ -6,7 +6,7 @@ from src.search_engines.NearestNeighbours import SklearnSearchEngine
 from src.predictor.predictor import predict_pose
 from sklearn.neighbors import NearestNeighbors
 from src.dataset.load_csv import PoseClass
-from src.livepipeline.normalising_coords import normalize_live_coords
+from src.livepipeline.normalising_coords import assess_live_pose_activity, normalize_live_pose
 from src.datapipeline.config import DATASET_PATH, PROJECT_ROOT
 
 #Serving the frontend through Flask (templates + static) so there are no cross-origin (CORS) problems.
@@ -17,10 +17,11 @@ app = Flask(
 )
 
 # One fitted search engine per similarity metric, so the UI can switch between them.
-# We retrieve 3 neighbours so the predictor can reject ambiguous matches, but the
+# We retrieve 5 neighbours so the predictor can reject ambiguous matches and the
+# debug panel can show the nearest live matches, but the
 # predicted label still comes from the single closest neighbour.
 METRICS = ["euclidean", "cosine", "manhattan"]
-search_engines = {metric: SklearnSearchEngine(model=NearestNeighbors(metric=metric), k=3) for metric in METRICS}
+search_engines = {metric: SklearnSearchEngine(model=NearestNeighbors(metric=metric), k=5) for metric in METRICS}
 
 pose_db = PoseClass(search_engines)
 pose_db.load_csv(DATASET_PATH)
@@ -95,11 +96,21 @@ def predict():
             "message": visibility_error
         })
 
-    normalised_vector = normalize_live_coords(raw_landmarks)
-    if normalised_vector is None:
+    normalized_pose = normalize_live_pose(raw_landmarks)
+    if normalized_pose is None:
         return jsonify({"error": "Invalid pose input"}), 400
 
+    normalised_coords, normalised_vector = normalized_pose
     result = predict_pose(normalised_vector, pose_db, metric)
+    pose_activity = assess_live_pose_activity(normalised_coords)
+    if not pose_activity["active"]:
+        result.update({
+            "prediction": None,
+            "match_found": False,
+            "message": "No confident pose match. Make a clearer active pose.",
+            "pose_activity": pose_activity,
+        })
+
     return jsonify(result)
 
 if __name__ == "__main__":

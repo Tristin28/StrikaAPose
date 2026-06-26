@@ -21,9 +21,6 @@ const simBar = document.getElementById("simBar");
 const lastUpdated = document.getElementById("lastUpdated");
 const resultCard = document.getElementById("resultCard");
 
-const ringFg = document.getElementById("ringFg");
-const ringText = document.getElementById("ringText");
-
 const qualityDot = document.getElementById("qualityDot");
 const qualityText = document.getElementById("qualityText");
 const landmarkCount = document.getElementById("landmarkCount");
@@ -40,12 +37,12 @@ const dbgDistance = document.getElementById("dbgDistance");
 const dbgMetric = document.getElementById("dbgMetric");
 const dbgLatency = document.getElementById("dbgLatency");
 const dbgPrediction = document.getElementById("dbgPrediction");
+const dbgNeighbours = document.getElementById("dbgNeighbours");
 
 const snapshotCanvas = document.createElement("canvas"); // offscreen, used to snapshot the webcam frame
 
 // ---------- state ----------
-const UPDATE_MS = 5000;             // backend match interval
-const RING_CIRC = 2 * Math.PI * 24; // circumference of the countdown ring (r = 24)
+const UPDATE_MS = 1000;             // backend match interval
 const LANDMARK_VISIBILITY_THRESHOLD = 0.5;
 const REQUIRED_LANDMARKS_FOR_MATCH = [
   { index: 11, name: "left shoulder" },
@@ -60,20 +57,20 @@ const REQUIRED_LANDMARKS_FOR_MATCH = [
 const SMOOTHING_WINDOW = 3;
 const MIN_STABLE_MATCHES = 2;
 const SIMILARITY_DISTANCE_LIMITS = {
-  euclidean: 9.5,
-  cosine: 0.07,
-  manhattan: 75.0
+  euclidean: 10.5,
+  cosine: 0.075,
+  manhattan: 70.0
 };
 
 let poseLandmarker = null;
 let drawingUtils = null;
 let stream = null;
 let cameraRunning = false;
-let latestLandmarks = null;   // most recent detected pose (sent to backend every 5s)
+let latestLandmarks = null;   // most recent detected pose sent to the backend
 let lastVideoTime = -1;       // so we only run detection on a new frame
-let nextUpdateTime = 0;       // timestamp of the next backend call (drives the countdown ring)
 let matchHistory = [];        // the last 3 matches, most recent first
 let predictionBuffer = [];    // recent labels used to avoid displaying one-frame matches
+let predictionRequestInFlight = false;
 
 // ---------- pipeline indicator ----------
 function setPipeline(step) {
@@ -115,7 +112,6 @@ async function toggleCamera() {
       placeholder.style.display = "none";
       cameraRunning = true;
       resetPredictionSmoothing();
-      nextUpdateTime = Date.now() + UPDATE_MS;
       setCameraButton();
       setSkeletonPill();
       setPipeline("webcam");
@@ -132,7 +128,6 @@ async function toggleCamera() {
   resetPredictionSmoothing();
   if (cameraRunning) {
     video.play();
-    nextUpdateTime = Date.now() + UPDATE_MS;
   } else {
     video.pause();
   }
@@ -238,10 +233,9 @@ function updateQuality(landmarks) {
   }
 }
 
-// 4. Every 5 seconds send the latest pose to Flask and show the closest match.
+// 4. Every second send the latest pose to Flask and show the closest match.
 async function sendLandmarksToBackend() {
-  nextUpdateTime = Date.now() + UPDATE_MS; // reset the countdown each tick
-  if (!cameraRunning || !latestLandmarks) return;
+  if (!cameraRunning || !latestLandmarks || predictionRequestInFlight) return;
 
   const missingKeyLandmarks = getMissingKeyLandmarks(latestLandmarks);
   if (missingKeyLandmarks.length > 0) {
@@ -255,13 +249,14 @@ async function sendLandmarksToBackend() {
     return;
   }
 
-  // Only landmark coordinates and visibility values are sent — never the image.
-  const landmarkArray = latestLandmarks.map(lm => [lm.x, lm.y, lm.z]);
+  // Only x/y landmark coordinates and visibility values are sent — never the image.
+  const landmarkArray = latestLandmarks.map(lm => [lm.x, lm.y]);
   const visibilityArray = latestLandmarks.map(lm => landmarkVisibility(lm));
   const userPoseDataUrl = captureUserPose(); // snapshot now so "Your Pose" matches what was sent
 
   setPipeline("flask");
   const t0 = performance.now();
+  predictionRequestInFlight = true;
   try {
     const response = await fetch("/predict", {
       method: "POST",
@@ -279,6 +274,8 @@ async function sendLandmarksToBackend() {
   } catch (error) {
     console.error("Prediction request failed:", error);
     qualityWarning.textContent = "Could not reach the matching server.";
+  } finally {
+    predictionRequestInFlight = false;
   }
 }
 
@@ -323,6 +320,7 @@ function showNoMatchState(message, debug = {}) {
   dbgMetric.textContent = debug.metric || "—";
   dbgLatency.textContent = debug.latency || "—";
   dbgPrediction.textContent = debug.prediction || "no match";
+  renderDebugNeighbours(debug.neighbours);
 }
 
 function updateDisplayedMetric() {
@@ -354,7 +352,26 @@ function showPendingMatchState(result, userPoseDataUrl, latency, stableCount) {
   dbgMetric.textContent = result.metric;
   dbgLatency.textContent = latency + " ms";
   dbgPrediction.textContent = `pending ${result.prediction}`;
+  renderDebugNeighbours(result.neighbours);
   qualityWarning.textContent = "Hold the pose for one more check.";
+}
+
+// REMOVABLE once done with it: temporary display to inspect the live top-5 neighbours.
+function renderDebugNeighbours(neighbours) {
+  if (!dbgNeighbours) return;
+
+  if (!neighbours || neighbours.length === 0) {
+    dbgNeighbours.innerHTML = "<li>No neighbours returned.</li>";
+    return;
+  }
+
+  dbgNeighbours.innerHTML = neighbours.slice(0, 5).map(neighbour => `
+    <li>
+      <strong>${neighbour.label}</strong>
+      <span>distance ${Number(neighbour.distance).toFixed(4)}</span>
+      <span>${neighbour.image}</span>
+    </li>
+  `).join("");
 }
 
 function updateResultPanel(result, userPoseDataUrl, latency) {
@@ -396,6 +413,7 @@ function updateResultPanel(result, userPoseDataUrl, latency) {
     dbgPrediction.textContent = result.distance_margin !== undefined
       ? `no match; margin ${result.distance_margin.toFixed(4)}`
       : result.message || "no match";
+    renderDebugNeighbours(result.neighbours);
     qualityWarning.textContent = result.message || "Make a clearer dataset pose.";
     return;
   }
@@ -449,6 +467,7 @@ function updateResultPanel(result, userPoseDataUrl, latency) {
   dbgMetric.textContent = result.metric;
   dbgLatency.textContent = latency + " ms";
   dbgPrediction.textContent = result.prediction;
+  renderDebugNeighbours(result.neighbours);
 
   flashMatch();
 }
@@ -475,14 +494,6 @@ function flashMatch() {
   resultCard.classList.add("flash");
 }
 
-// Circular countdown ring, updated ~10x/sec.
-function updateCountdown() {
-  const remaining = Math.max(0, nextUpdateTime - Date.now());
-  const fraction = remaining / UPDATE_MS; // 1 just after a call, 0 right before the next
-  ringFg.style.strokeDashoffset = RING_CIRC * (1 - fraction);
-  ringText.textContent = Math.ceil(remaining / 1000);
-}
-
 // ---------- wiring ----------
 resultCard.classList.add("highlight-target");
 startCameraBtn.addEventListener("click", toggleCamera);
@@ -492,5 +503,4 @@ metricSelect.addEventListener("change", () => {
 });
 updateDisplayedMetric();
 setInterval(sendLandmarksToBackend, UPDATE_MS);
-setInterval(updateCountdown, 100);
 setupModel();

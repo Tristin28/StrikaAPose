@@ -36,7 +36,7 @@
           <div class="placeholder" id="placeholder">Your live camera feed will appear here once you allow camera access.</div>
           <div class="cam-pills">
             <span class="pill pill-live" id="skeletonPill">Skeleton: idle</span>
-            <span class="pill">Backend match: every 5s</span>
+            <span class="pill">Backend match: every 1s</span>
           </div>
         </div>
       </section>
@@ -61,12 +61,6 @@
               <span class="card-eyebrow">Best available match</span>
               <h2 id="predictionLabel">Waiting for pose…</h2>
             </div>
-            <!-- circular countdown -->
-            <svg class="ring" viewBox="0 0 56 56" aria-hidden="true">
-              <circle class="ring-bg" cx="28" cy="28" r="24"></circle>
-              <circle class="ring-fg" id="ringFg" cx="28" cy="28" r="24"></circle>
-              <text class="ring-text" x="28" y="33" id="ringText">5</text>
-            </svg>
           </div>
 
           <div class="metric-row">
@@ -123,6 +117,8 @@
         <span>Backend response time:</span><strong id="dbgLatency">—</strong>
         <span>Prediction (voted):</span><strong id="dbgPrediction">—</strong>
       </div>
+      <!-- REMOVABLE once done with it: shows live nearest-neighbour debugging while tuning features. -->
+      <ol class="debug-neighbours" id="dbgNeighbours"></ol>
     </details>
   </div>
 

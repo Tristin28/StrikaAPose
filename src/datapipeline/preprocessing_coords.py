@@ -110,10 +110,9 @@ def rotate_pose(coords, LEFT_SHOULDER=11, RIGHT_SHOULDER=12):
     x = coords[:, 0]
     y = coords[:, 1]
 
-    #rotating the x-y axis by the shoulder angle and leaving z axist alone because i fixed the sideways tilt in the frames.
+    #rotating the x-y axis by the shoulder angle.
     roated_coords[:, 0] = x * cos_theta - y * sin_theta
     roated_coords[:, 1] = x * sin_theta + y * cos_theta
-    roated_coords[:, 2] = coords[:, 2]
 
     return roated_coords
 
@@ -122,7 +121,7 @@ def normalise_single_pose(pose_landmarks):
         will normalsie the pose so that the coordinates are relative to the actual pose and not dependent on the image features 
     '''
 
-    coords = np.array([[lm.x, lm.y, lm.z] for lm in pose_landmarks])
+    coords = np.array([[lm.x, lm.y] for lm in pose_landmarks])
 
     coords = position(coords)
     

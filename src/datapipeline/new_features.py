@@ -195,7 +195,7 @@ def compute_angle(a, b, c):
     
 
 def build_feature_vector(coords):
-    flat_coords = coords.flatten() #99 features
+    flat_coords = coords.flatten() #66 features
     angles = extract_joint_angles(coords) #8 features
     distances = extract_key_distances(coords) #7 features
     hand_features = extract_hand_features(coords) #6 features (coarse hand orientation)
