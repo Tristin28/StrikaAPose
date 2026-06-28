@@ -7,7 +7,6 @@ Python 3.12 or newer is recommended for this project.
 ## Project Structure
 
 ```text
-.
 ├── Images/                         # Labelled dataset images, grouped by pose/class name
 │   ├── Heart/
 │   ├── HandsOnHips/

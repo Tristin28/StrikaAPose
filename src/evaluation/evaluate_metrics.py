@@ -61,9 +61,6 @@ def remove_singleton_labels(features, labels):
 
 
 def choose_fold_count(labels, requested_folds):
-    '''
-
-    '''
     min_label_count = min(Counter(labels).values())
     return min(requested_folds, min_label_count)
 

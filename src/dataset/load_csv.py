@@ -4,8 +4,7 @@ import numpy as np
 class PoseClass:
     def __init__(self, search_engines):
         '''
-            search_engines is a dict mapping a metric name to a search engine, e.g.
-            {"euclidean": SklearnSearchEngine(...), "cosine": SklearnSearchEngine(...)}
+            search_engines is a dict mapping a metric name to a search engine, e.g. {"euclidean": SklearnSearchEngine(...), "cosine": SklearnSearchEngine(...)} 
             so the user can compare different similarity metrics from the UI.
         '''
         self.labels = None

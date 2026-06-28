@@ -16,10 +16,11 @@ app = Flask(
     static_folder=str(PROJECT_ROOT / "static"),
 )
 
-# One fitted search engine per similarity metric, so the UI can switch between them.
-# We retrieve 5 neighbours so the predictor can reject ambiguous matches and the
-# debug panel can show the nearest live matches. The predictor uses those
-# neighbours for majority voting and confidence checks.
+'''
+    One fitted search engine per similarity metric, so the UI can switch between them.
+    We retrieve 5 neighbours so the predictor can reject ambiguous matches and the debug panel can show the nearest live matches. 
+    The predictor uses those neighbours for majority voting and confidence checks.
+'''
 METRICS = ["euclidean", "cosine", "manhattan"]
 search_engines = {metric: SklearnSearchEngine(model=NearestNeighbors(metric=metric), k=5) for metric in METRICS}
 

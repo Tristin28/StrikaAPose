@@ -42,7 +42,7 @@ def normalize_and_extract_features(images_folder, landmarker, stats=None):
 
         feature_vector = build_feature_vector(coords)
         label = file_path.parent.name
-        image_path = file_path.relative_to(PROJECT_ROOT).as_posix() #e.g. "Images/Heart/Heart_001.jpg" so the frontend can load it
+        image_path = file_path.relative_to(PROJECT_ROOT).as_posix()
         if stats is not None:
             stats["added_to_dataset"] += 1
         all_features.append((image_path, label, feature_vector))
@@ -151,10 +151,8 @@ def extract_pose_relationship_features(coords):
 
 def extract_hand_features(coords):
     '''
-        Lightweight hand-orientation features from the coarse hand points MediaPipe Pose
-        already provides (wrist, thumb, index, pinky). No extra hand model is used.
-        Per hand we capture: how open the hand is, how the wrist is bent, and where the
-        thumb points relative to the index finger.
+        Lightweight hand-orientation features from the coarse hand points MediaPipe Pose already provides (wrist, thumb, index, pinky). 
+        No extra hand model is used. Per hand we capture: how open the hand is, how the wrist is bent, and where the thumb points relative to the index finger.
     '''
     hand_features = [
         #left hand
@@ -184,8 +182,7 @@ def compute_angle(a, b, c):
     euclidian_distance = (np.linalg.norm(ba) * np.linalg.norm(bc))
     if euclidian_distance < 1e-8:
         '''
-            if cooedinates (b, a) or (b, c) are near each other or the same point then this means
-            There is no reliable line to use to compute angle b
+            if cooedinates (b, a) or (b, c) are near each other or the same point then this means there is no reliable line to use to compute angle b
         '''
         return 0.0
     

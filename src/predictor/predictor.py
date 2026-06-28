@@ -2,32 +2,27 @@ from collections import Counter
 
 from src.dataset.load_csv import PoseClass
 
-# Open-set guard: nearest neighbours always return something, even for a neutral
-# or unrelated pose. These limits decide when the closest result is still too far
-# away to be treated as a real match. Tune these if the dataset changes a lot.
+"""Maximum normal distance allowed before a match is rejected."""
 MATCH_DISTANCE_LIMITS = {
     "euclidean": 8.5,
     "cosine": 0.055,
     "manhattan": 55.0,
 }
 
-# If the live pose is slightly over the strict distance limit, a strong top-5
-# neighbour vote can still accept it. This helps live-camera matching, where the
-# pose is noisier than the cleaned dataset images.
+"""Number of top-5 neighbours that must agree for a strong vote."""
 STRONG_VOTE_MIN_NEIGHBOURS = 4
+
+"""Relaxed maximum distance allowed only when the neighbours strongly agree."""
 STRONG_VOTE_DISTANCE_LIMITS = {
     "euclidean": 10.5,
     "cosine": 0.075,
     "manhattan": 70.0,
 }
 
-# With 5 neighbours, 3 votes is a real majority. This lets the prediction ignore
-# one unusually close outlier when most neighbours agree on another label.
+"""Number of top-5 neighbours needed to choose the label by majority."""
 MAJORITY_VOTE_MIN_NEIGHBOURS = 3
 
-# The closest neighbour also needs to be clearly better than the nearest
-# different-label neighbour. Similar same-label neighbours are useful evidence,
-# not ambiguity.
+"""Minimum gap needed between the winning label and the nearest different label."""
 MIN_DISTANCE_MARGINS = {
     "euclidean": 1.0,
     "cosine": 0.018,
@@ -115,13 +110,7 @@ def predict_pose(unseen_vector, pose_store: PoseClass, metric="cosine"):
         "match_found": True,
         "best_match": best_match, #the single closest image, which is what we display
         "neighbours": neighbours,
-        "accepted_by": (
-            "strong_neighbour_vote"
-            if strong_neighbour_vote
-            else "majority_vote"
-            if majority_vote
-            else "strict_distance"
-        ),
+        "accepted_by": ("strong_neighbour_vote" if strong_neighbour_vote else "majority_vote" if majority_vote else "strict_distance"),
         "predicted_vote_count": predicted_vote_count,
         "neighbour_count": neighbour_count,
     }
