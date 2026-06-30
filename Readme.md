@@ -156,19 +156,3 @@ The evaluation results describe performance on the generated CSV dataset. Live w
 6. `src/predictor/predictor.py` searches `src/dataset/pose_dataset.csv` with the selected metric: Euclidean, cosine, or Manhattan.
 7. The backend retrieves the top 5 nearest neighbours. If at least 3 of those neighbours agree, that label wins by majority vote. A strong 4-out-of-5 vote can pass a slightly relaxed live-camera distance threshold.
 8. Flask returns the predicted label, closest image from the winning label, distance, and debug neighbours to the browser.
-
-## Useful Commands
-
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Rebuild the generated pose dataset
-python -m src.datapipeline.Build_CSV
-
-# Evaluate Euclidean, cosine, and Manhattan matching
-python -m src.evaluation.evaluate_metrics
-
-# Run the Flask web app
-python -m src.app
-```
